@@ -1,0 +1,49 @@
+#!/bin/bash
+
+set -e
+
+PASSENGER_STATUS=/opt/rubies/ruby-2.2.3/bin/passenger-status
+MACKEREL_AGENT_PLUGIN_META=x"$MACKEREL_AGENT_PLUGIN_META"
+
+if [ "$MACKEREL_AGENT_PLUGIN_META" = "x1" ]; then
+    echo "# mackerel-agent-plugin"
+    cat << EOF
+{
+    "graphs": {
+        "passenger.processes": {
+            "label": "Passenger processes",
+            "unit": "integer",
+            "metrics": [
+                {
+                    "name": "Processes",
+                    "label": "processes"
+                }
+            ]
+        },
+        "passenger.queue": {
+            "label": "Passenger queue",
+            "unit": "integer",
+            "metrics": [
+                {
+                    "name": "Queue",
+                    "label": "queue"
+                }
+            ]
+        }
+    }
+}
+EOF
+    exit 0
+fi
+
+
+
+DATE=$(date +%s)
+PROCESSES=$($PASSENGER_STATUS | grep 'Processes' | sed 's/ //g' | cut -d':' -f 2)
+QUEUE=$($PASSENGER_STATUS | grep 'Requests in top-level queue' | sed 's/ //g' | cut -d':' -f 2)
+
+echo -e "passenger.processes.processes\t$PROCESSES\t$DATE"
+echo -e "passenger.queue.queue\t$QUEUE\t$DATE"
+
+
+
